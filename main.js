@@ -6,7 +6,6 @@ const t = THREE;
 let camera, scene, renderer, world;
 let near, far;
 let pixR = window.devicePixelRatio ? window.devicePixelRatio : 1;
-let cubes = [];
 let sceneOffsetTarget = {x: 0, y: 0};
 let sceneOffset = {x: 0, y: 0};
 
@@ -87,33 +86,6 @@ else
 		return new t.Points(geometry, material);
 	}
 
-	function createParticleCube(winShape, color, size) {
-		const geometry = new t.Geometry();
-		const material = new t.PointsMaterial({ color: color, size: 2 });
-		const particleCount = 1000; // Nombre de particules dans chaque "cube"
-	
-		for (let i = 0; i < particleCount; i++) {
-			let x = (Math.random() - 0.5) * size;
-			let y = (Math.random() - 0.5) * size;
-			let z = (Math.random() - 0.5) * size;
-	
-			geometry.vertices.push(new t.Vector3(x, y, z));
-		}
-	
-		const particleCube = new t.Points(geometry, material);
-		particleCube.position.x = winShape.x + (winShape.w * 0.5);
-		particleCube.position.y = winShape.y + (winShape.h * 0.5);
-	
-		return particleCube;
-	}
-
-	function applyInertiaToSpheres() {
-		spheres.forEach(sphere => {
-			// Appliquer l'effet d'inertie
-			sphere.position.x += windowVelocity.x * 0.1;
-			sphere.position.y += windowVelocity.y * 0.1;
-		});
-	}
 	
 	function generateUniqueColor(index) {
 		let c = new t.Color();
@@ -161,18 +133,18 @@ else
 
 	function windowsUpdated ()
 	{
-		updateNumberOfCubes();
+		updateNumberOfspheres();
 	}
 
-	function updateNumberOfCubes() {
+	function updateNumberOfspheres() {
 		let wins = windowManager.getWindows();
 
     // Retirer toutes les sphères existantes
-    cubes.forEach((c) => {
+    spheres.forEach((c) => {
         world.remove(c);
     });
 
-    cubes = [];
+    spheres = [];
 
     // Ajouter de nouvelles sphères de particules
     for (let i = 0; i < wins.length; i++) {
@@ -183,7 +155,7 @@ else
         particleSphere.position.x = win.shape.x + (win.shape.w * 0.5);
         particleSphere.position.y = win.shape.y + (win.shape.h * 0.5);
         world.add(particleSphere);
-        cubes.push(particleSphere);
+        spheres.push(particleSphere);
     }
 	}
 
@@ -214,21 +186,20 @@ else
 		let wins = windowManager.getWindows();
 
 
-		// loop through all our cubes and update their positions based on current window positions
-		for (let i = 0; i < cubes.length; i++)
+		// loop through all our spheres and update their positions based on current window positions
+		for (let i = 0; i < spheres.length; i++)
 		{
-			let cube = cubes[i];
+			let sphere = spheres[i];
 			let win = wins[i];
 			let _t = t;// + i * .2;
 
 			let posTarget = {x: win.shape.x + (win.shape.w * .5), y: win.shape.y + (win.shape.h * .5)}
 
-			cube.position.x = cube.position.x + (posTarget.x - cube.position.x) * falloff;
-			cube.position.y = cube.position.y + (posTarget.y - cube.position.y) * falloff;
-			cube.rotation.x = _t * .5;
-			cube.rotation.y = _t * .3;
+			sphere.position.x = sphere.position.x + (posTarget.x - sphere.position.x) * falloff;
+			sphere.position.y = sphere.position.y + (posTarget.y - sphere.position.y) * falloff;
+			sphere.rotation.x = _t * .5;
+			sphere.rotation.y = _t * .3;
 		};
-		applyInertiaToSpheres();
 
 		renderer.render(scene, camera);
 		requestAnimationFrame(render);

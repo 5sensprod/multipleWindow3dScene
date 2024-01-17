@@ -10,6 +10,8 @@ let cubes = [];
 let sceneOffsetTarget = {x: 0, y: 0};
 let sceneOffset = {x: 0, y: 0};
 
+let spheres = [];
+
 let today = new Date();
 today.setHours(0);
 today.setMinutes(0);
@@ -65,6 +67,26 @@ else
 		}, 500)	
 	}
 
+	function createParticleSphere(color, size) {
+		const geometry = new t.Geometry();
+		const material = new t.PointsMaterial({ color: color, size: 0.5 });
+		const particleCount = 5000; // Augmentez pour une densité plus élevée
+		const radius = size / 2;
+	
+		for (let i = 0; i < particleCount; i++) {
+			let phi = Math.random() * Math.PI * 2;
+			let theta = Math.random() * Math.PI;
+			let r = Math.random() * radius; // Choix aléatoire d'un rayon pour remplir la sphère
+			let x = r * Math.sin(theta) * Math.cos(phi);
+			let y = r * Math.sin(theta) * Math.sin(phi);
+			let z = r * Math.cos(theta);
+	
+			geometry.vertices.push(new t.Vector3(x, y, z));
+		}
+	
+		return new t.Points(geometry, material);
+	}
+
 	function createParticleCube(winShape, color, size) {
 		const geometry = new t.Geometry();
 		const material = new t.PointsMaterial({ color: color, size: 2 });
@@ -83,6 +105,14 @@ else
 		particleCube.position.y = winShape.y + (winShape.h * 0.5);
 	
 		return particleCube;
+	}
+
+	function applyInertiaToSpheres() {
+		spheres.forEach(sphere => {
+			// Appliquer l'effet d'inertie
+			sphere.position.x += windowVelocity.x * 0.1;
+			sphere.position.y += windowVelocity.y * 0.1;
+		});
 	}
 	
 	function generateUniqueColor(index) {
@@ -136,23 +166,25 @@ else
 
 	function updateNumberOfCubes() {
 		let wins = windowManager.getWindows();
-	
-		// Retirer tous les cubes ou les groupes de particules existants
-		cubes.forEach((c) => {
-			world.remove(c);
-		});
-	
-		cubes = [];
-	
-		// Ajouter de nouveaux groupes de particules basés sur la configuration actuelle des fenêtres
-		for (let i = 0; i < wins.length; i++) {
-			let win = wins[i];
-			let color = generateUniqueColor(i);
-			let size = 100 + i * 50; // Utilisez les mêmes dimensions que les cubes originaux
-			let particleCube = createParticleCube(win.shape, color, size);
-			world.add(particleCube);
-			cubes.push(particleCube);
-		}
+
+    // Retirer toutes les sphères existantes
+    cubes.forEach((c) => {
+        world.remove(c);
+    });
+
+    cubes = [];
+
+    // Ajouter de nouvelles sphères de particules
+    for (let i = 0; i < wins.length; i++) {
+        let win = wins[i];
+        let color = generateUniqueColor(i);
+        let size = 100 + i * 50; // Taille de la sphère
+        let particleSphere = createParticleSphere(color, size);
+        particleSphere.position.x = win.shape.x + (win.shape.w * 0.5);
+        particleSphere.position.y = win.shape.y + (win.shape.h * 0.5);
+        world.add(particleSphere);
+        cubes.push(particleSphere);
+    }
 	}
 
 	function updateWindowShape (easing = true)
@@ -196,6 +228,7 @@ else
 			cube.rotation.x = _t * .5;
 			cube.rotation.y = _t * .3;
 		};
+		applyInertiaToSpheres();
 
 		renderer.render(scene, camera);
 		requestAnimationFrame(render);
